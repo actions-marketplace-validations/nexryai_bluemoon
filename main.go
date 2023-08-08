@@ -6,6 +6,7 @@ import (
 	"git.sda1.net/nexryai/bluemoon/core"
 	"git.sda1.net/nexryai/bluemoon/services"
 	"github.com/google/uuid"
+	"os"
 )
 
 func main() {
@@ -20,7 +21,16 @@ func main() {
 		core.MsgInfo("tmpRootDir = " + tmpRootDir)
 
 		services.CreateTmpfs(tmpRootDir, config.RamLimit)
-		//os.Exit(0)
+
+		// どっかでエラー起こしてもクリーンアップされるようにする
+		defer func() {
+			if r := recover(); r != nil {
+				core.MsgErr(fmt.Sprintf("Falat error occurred: %s", r.(error)))
+				services.CleanTmpFiles(tmpRootDir)
+				os.Exit(1)
+			}
+		}()
+
 		services.ExtractDockerImage(config.DockerImage, tmpRootDir)
 
 		core.WriteToFile(config.Exec, fmt.Sprintf("%s/%s.sh", tmpRootDir, id.String()))

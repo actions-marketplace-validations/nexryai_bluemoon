@@ -40,10 +40,8 @@ func MsgDetail(text string) {
 
 func ExitOnError(err error, message string) {
 	if err != nil {
-		errorInfo := fmt.Sprintf("Fatal error: %v", err)
-		MsgErr(errorInfo)
-		MsgDetail(message)
-		os.Exit(1)
+		MsgErr(message)
+		panic(err)
 	}
 
 	return
