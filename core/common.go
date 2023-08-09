@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"github.com/google/uuid"
 	"os"
 )
 
@@ -45,4 +46,9 @@ func ExitOnError(err error, message string) {
 	}
 
 	return
+}
+
+func GenUUID() string {
+	id := uuid.New()
+	return id.String()
 }
