@@ -1,0 +1,3 @@
+dockerImage: "nexryai/misskey-agathos"
+ramLimit: "1700M"
+exec: "cd misskey && yarn start"
