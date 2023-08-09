@@ -9,6 +9,14 @@ import (
 	"os"
 )
 
+func cleanAllFiles(tmpRoot string) {
+	services.CleanTmpFiles(tmpRoot + "/root")
+	services.CleanTmpFiles(tmpRoot + "/image")
+	services.CleanTmpFiles(tmpRoot + "/base")
+	services.CleanTmpFiles(tmpRoot + "/over")
+	services.CleanTmpFiles(tmpRoot + "/work")
+}
+
 func main() {
 	flag.Parse()
 	operation := flag.Arg(0)
@@ -26,17 +34,18 @@ func main() {
 		defer func() {
 			if r := recover(); r != nil {
 				core.MsgErr(fmt.Sprintf("Falat error occurred: %s", r.(error)))
-				services.CleanTmpFiles(tmpRootDir)
+				cleanAllFiles(tmpRootDir)
 				os.Exit(1)
 			}
 		}()
 
-		services.ExtractDockerImage(config.DockerImage, tmpRootDir)
+		baseDir := services.DownloadAndMountPackage(config.PackageUrl, id.String(), config.RamLimit)
+		rootDir := services.CreateOverlay(baseDir, id.String())
 
-		core.WriteToFile(config.Exec, fmt.Sprintf("%s/%s.sh", tmpRootDir, id.String()))
+		core.WriteToFile(config.Exec, fmt.Sprintf("%s/%s.sh", rootDir, id.String()))
 
 		nspawnOpts := core.NspawnOpts{
-			RootDirPath:  tmpRootDir,
+			RootDirPath:  rootDir,
 			Uid:          "",
 			BindDir:      config.BindDir,
 			StartCommand: []string{"sh", fmt.Sprintf("/%s.sh", id.String())},
@@ -47,7 +56,7 @@ func main() {
 		services.StartNspawn(nspawnOpts)
 
 		// クリーンアップ
-		services.CleanTmpFiles(tmpRootDir)
+		cleanAllFiles(tmpRootDir)
 
 	} else if operation == "build" {
 		core.MsgInfo("Build bluemoon package")
@@ -83,9 +92,6 @@ func main() {
 
 		core.MsgInfo("Done!")
 
-	} else if operation == "clean" {
-		core.MsgWarn("This operation MUST be executed after making sure that there is no running container !!!")
-		services.CleanAllTmpFiles()
 	} else {
 		core.MsgErr("Invalid args")
 	}

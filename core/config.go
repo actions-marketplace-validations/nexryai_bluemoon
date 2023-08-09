@@ -7,6 +7,7 @@ import (
 
 type Config struct {
 	DockerImage         string   `yaml:"dockerImage"`
+	PackageUrl          string   `yaml:"packageUrl"`
 	RamLimit            string   `yaml:"ramLimit"`
 	BindDir             []string `yaml:"bindDir"`
 	AllowWriteToBindDir bool     `yaml:"allowWriteToBindDir"`

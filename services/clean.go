@@ -1,13 +1,12 @@
 package services
 
-import "git.sda1.net/nexryai/bluemoon/core"
+import (
+	"git.sda1.net/nexryai/bluemoon/core"
+	"os/exec"
+)
 
 func CleanTmpFiles(path string) {
-	core.ExecCommand("umount", []string{path})
+	// マウントされて無くてエラーになっても続行したいので普通にexecする
+	exec.Command("umount", path)
 	core.ExecCommand("rm", []string{"-rf", path})
-}
-
-func CleanAllTmpFiles() {
-	core.ExecCommand("umount", []string{"/var/bluemoon/tmp/*"})
-	core.ExecCommand("rm", []string{"-rf", "/var/bluemoon/tmp/"})
 }
