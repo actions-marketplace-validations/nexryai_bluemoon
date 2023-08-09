@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -43,35 +42,16 @@ func ExecCommandGetResult(command string, args []string) []string {
 func ExecCommandWithStdout(command string, args []string) {
 	cmd := exec.Command(command, args...)
 
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		ExitOnError(err, "failed to create pipe(s)")
-	}
+	var stdBuffer bytes.Buffer
+	mw := io.MultiWriter(os.Stdout, &stdBuffer)
 
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		ExitOnError(err, "failed to create pipe(s)")
-	}
+	cmd.Stdout = mw
+	cmd.Stderr = mw
 
-	err = cmd.Start()
+	err := cmd.Run()
 	if err != nil {
-		ExitOnError(err, "failed to start command")
-	}
-
-	go copyOutput(stdout, os.Stdout)
-	go copyOutput(stderr, os.Stderr)
-
-	err = cmd.Wait()
-	if err != nil {
-		MsgErr("Command exit code != 0")
+		ExitOnError(err, "failed to exec command")
 	}
 
 	return
-}
-
-func copyOutput(src io.Reader, dest io.Writer) {
-	_, err := io.Copy(dest, src)
-	if err != nil {
-		log.Fatal(err)
-	}
 }
