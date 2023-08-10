@@ -10,11 +10,7 @@ import (
 )
 
 func cleanAllFiles(tmpRoot string) {
-	services.CleanTmpFiles(tmpRoot + "/root")
-	services.CleanTmpFiles(tmpRoot + "/image")
-	services.CleanTmpFiles(tmpRoot + "/base")
-	services.CleanTmpFiles(tmpRoot + "/over")
-	services.CleanTmpFiles(tmpRoot + "/work")
+	core.ExecCommand("umount", []string{"-l", tmpRoot})
 }
 
 func main() {

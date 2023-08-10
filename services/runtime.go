@@ -3,15 +3,19 @@ package services
 import (
 	"fmt"
 	"git.sda1.net/nexryai/bluemoon/core"
+	"os"
 )
 
 func DownloadAndMountPackage(packageUrl string, id string, sizeLimit string) string {
 	packageSfsPath := fmt.Sprintf("/var/bluemoon/tmp/%s/image/root.sfs", id)
 	packageMountPoint := fmt.Sprintf("/var/bluemoon/tmp/%s/base", id)
 
-	core.ExecCommand("wget", []string{packageUrl, "-o", packageSfsPath})
+	os.Mkdir(fmt.Sprintf("/var/bluemoon/tmp/%s/image", id), 0644)
 
-	CreateTmpfs(packageMountPoint, sizeLimit)
+	core.MsgInfo("Downloading package...")
+	core.ExecCommand("wget", []string{packageUrl, "-O", packageSfsPath})
+
+	os.Mkdir(packageMountPoint, 0644)
 	core.ExecCommand("mount", []string{"-t", "squashfs", packageSfsPath, packageMountPoint})
 	return packageMountPoint
 }
@@ -25,8 +29,9 @@ func CreateOverlay(baseDir string, id string) string {
 	overlayDir := fmt.Sprintf("/var/bluemoon/tmp/%s/over", id)
 	workDir := fmt.Sprintf("/var/bluemoon/tmp/%s/work", id)
 
-	CreateTmpfs(overlayDir, "100M")
-	CreateTmpfs(workDir, "500M")
+	os.Mkdir(mountDir, 0644)
+	os.Mkdir(overlayDir, 0644)
+	os.Mkdir(workDir, 0644)
 
 	mountOpts := fmt.Sprintf("lowerdir=%s,upperdir=%s,workdir=%s", baseDir, overlayDir, workDir)
 	core.ExecCommand("mount", []string{"-t", "overlay", "overlay", "-o", mountOpts, mountDir})
