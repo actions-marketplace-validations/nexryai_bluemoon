@@ -7,13 +7,20 @@ import (
 )
 
 func DownloadAndMountPackage(packageUrl string, id string, sizeLimit string) string {
-	packageSfsPath := fmt.Sprintf("/var/bluemoon/tmp/%s/image/root.sfs", id)
+	packageSfsPath := fmt.Sprintf("/var/bluemoon/images/%s.sfs", id)
 	packageMountPoint := fmt.Sprintf("/var/bluemoon/tmp/%s/base", id)
 
-	os.Mkdir(fmt.Sprintf("/var/bluemoon/tmp/%s/image", id), 0644)
+	// Download if no exists
+	_, err := os.Stat("/var/bluemoon/images")
+	if err != nil {
+		os.Mkdir("/var/bluemoon/images", 0644)
+	}
 
-	core.MsgInfo("Downloading package...")
-	core.ExecCommand("wget", []string{packageUrl, "-O", packageSfsPath})
+	_, err = os.Stat(packageSfsPath)
+	if err != nil {
+		core.MsgInfo("Downloading package...")
+		core.ExecCommand("wget", []string{packageUrl, "-O", packageSfsPath})
+	}
 
 	os.Mkdir(packageMountPoint, 0644)
 	core.ExecCommand("mount", []string{"-t", "squashfs", packageSfsPath, packageMountPoint})
@@ -24,7 +31,7 @@ func DownloadAndMountPackage(packageUrl string, id string, sizeLimit string) str
 func CreateOverlay(baseDir string, id string) string {
 
 	// これが最終的なコンテナのエントリーポイント
-	mountDir := fmt.Sprintf("/var/bluemoon/tmp/%s/root", id)
+	mountDir := fmt.Sprintf("/var/bluemoon/tmp/%s/%s", id, id)
 
 	overlayDir := fmt.Sprintf("/var/bluemoon/tmp/%s/over", id)
 	workDir := fmt.Sprintf("/var/bluemoon/tmp/%s/work", id)

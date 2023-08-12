@@ -1,12 +1,14 @@
 package main
 
 import (
+	"crypto/sha1"
 	"flag"
 	"fmt"
 	"git.sda1.net/nexryai/bluemoon/core"
 	"git.sda1.net/nexryai/bluemoon/services"
 	"github.com/google/uuid"
 	"os"
+	"os/exec"
 )
 
 func cleanAllFiles(tmpRoot string) {
@@ -18,11 +20,18 @@ func main() {
 	operation := flag.Arg(0)
 
 	if operation == "start" {
-		id := uuid.New()
 		config := core.LoadConfig("./bluemoon.yml")
+		id := fmt.Sprintf("%x", sha1.Sum([]byte(config.PackageUrl)))
 
-		tmpRootDir := "/var/bluemoon/tmp/" + id.String()
+		tmpRootDir := "/var/bluemoon/tmp/" + id
 		core.MsgInfo("tmpRootDir = " + tmpRootDir)
+
+		// ゴミが残ってたら消す
+		_, err := os.Stat(tmpRootDir)
+		if err != nil {
+			exec.Command("umount", fmt.Sprintf("-l %s/%s", tmpRootDir, id))
+			exec.Command("umount", fmt.Sprintf("-l %s", tmpRootDir))
+		}
 
 		services.CreateTmpfs(tmpRootDir, config.RamLimit)
 
@@ -35,16 +44,16 @@ func main() {
 			}
 		}()
 
-		baseDir := services.DownloadAndMountPackage(config.PackageUrl, id.String(), config.RamLimit)
-		rootDir := services.CreateOverlay(baseDir, id.String())
+		baseDir := services.DownloadAndMountPackage(config.PackageUrl, id, config.RamLimit)
+		rootDir := services.CreateOverlay(baseDir, id)
 
-		core.WriteToFile(config.Exec, fmt.Sprintf("%s/%s.sh", rootDir, id.String()))
+		core.WriteToFile(config.Exec, fmt.Sprintf("%s/%s.sh", rootDir, id))
 
 		nspawnOpts := core.NspawnOpts{
 			RootDirPath:  rootDir,
 			Uid:          "",
 			BindDir:      config.BindDir,
-			StartCommand: []string{"sh", fmt.Sprintf("/%s.sh", id.String())},
+			StartCommand: []string{"sh", fmt.Sprintf("/%s.sh", id)},
 		}
 
 		// コンテナ実行
