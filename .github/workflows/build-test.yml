@@ -1,0 +1,37 @@
+name: Build and Test
+on:
+  push:
+    branches:
+      - "main"
+
+jobs:
+  build-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+          
+      - name: Install dependencies
+        run: |
+          sudo apt-get purge -y docker docker-engine docker.io containerd runc
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+          echo \
+          "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+          $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y docker-ce docker-ce-cli containerd.io squashfs-tools jq golang
+          git clone https://github.com/nexryai/bluemoon bluemoon-src
+          cd bluemoon-src && go build -o bluemoon
+          cd .. && mv bluemoon-src/bluemoon ./
+          rm -rf bluemoon-src
+          
+
+      - name: Build package
+        run: |
+          git clone https://github.com/nexryai/media-proxy-go src
+          echo "packageName: \"test-media-proxy\"" > bluemoon.build.yml
+          echo "srcDir: \"./src\"" >> bluemoon.build.yml
+          echo "enableMultiPlatformBuild: true" >> bluemoon.build.yml
+          echo "platforms: [\"amd64\", \"arm64\"]" >> bluemoon.build.yml
+          sudo ./bluemoon build
