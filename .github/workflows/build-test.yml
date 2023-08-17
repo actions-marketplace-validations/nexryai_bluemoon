@@ -32,6 +32,4 @@ jobs:
           git clone https://github.com/nexryai/media-proxy-go src
           echo "packageName: \"test-media-proxy\"" > bluemoon.build.yml
           echo "srcDir: \"./src\"" >> bluemoon.build.yml
-          echo "enableMultiPlatformBuild: true" >> bluemoon.build.yml
-          echo "platforms: [\"amd64\", \"arm64\"]" >> bluemoon.build.yml
           sudo ./bluemoon build

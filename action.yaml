@@ -21,5 +21,6 @@ runs:
           git clone https://github.com/nexryai/bluemoon bluemoon-src
           cd bluemoon-src && go build -o bluemoon
           sudo mv ./bluemoon /usr/bin/
+          sudo chmod +x /usr/bin/bluemoon
           cd ..
           rm -rf bluemoon-src
