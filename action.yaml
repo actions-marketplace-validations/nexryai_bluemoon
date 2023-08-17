@@ -20,5 +20,6 @@ runs:
       run: |
           git clone https://github.com/nexryai/bluemoon bluemoon-src
           cd bluemoon-src && go build -o bluemoon
-          cd .. && mv bluemoon-src/bluemoon ./
+          mv ./bluemoon /usr/bin/
+          cd ..
           rm -rf bluemoon-src
