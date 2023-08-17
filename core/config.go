@@ -16,9 +16,11 @@ type Config struct {
 }
 
 type BuildConfig struct {
-	PackageName string `yaml:"packageName"`
-	SrcRepo     string `yaml:"srcRepo"`
-	SrcDir      string `yaml:"srcDir"`
+	PackageName              string   `yaml:"packageName"`
+	SrcRepo                  string   `yaml:"srcRepo"`
+	SrcDir                   string   `yaml:"srcDir"`
+	EnableMultiPlatformBuild bool     `yaml:"enableMultiPlatformBuild"`
+	Platforms                []string `yaml:"platforms"`
 }
 
 func LoadConfig(configFilePath string) Config {

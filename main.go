@@ -90,10 +90,26 @@ func main() {
 			core.MsgInfo(fmt.Sprintf("Build a package from src dir (%s)", config.SrcDir))
 		}
 
-		tmpRootTar := services.BuildAndExtractDockerImage(config.SrcDir)
+		if config.EnableMultiPlatformBuild {
+			core.MsgInfo("Use multiplatform build!")
+		} else {
+			config.Platforms = []string{"amd64"}
+		}
 
-		core.MsgInfo("Building bluemoon package...")
-		services.BuildBluemoonPackageFromTar(tmpRootTar, config.PackageName+".sfs")
+		for _, p := range config.Platforms {
+			tmpRootTar := services.BuildAndExtractDockerImage(config.SrcDir, p)
+			core.MsgInfo("Building bluemoon package... - " + p)
+
+			packageName := config.PackageName
+
+			if config.EnableMultiPlatformBuild {
+				packageName = fmt.Sprintf("%s-%s.sfs", packageName, p)
+			} else {
+				packageName = fmt.Sprintf("%s.sfs", packageName)
+			}
+
+			services.BuildBluemoonPackageFromTar(tmpRootTar, packageName)
+		}
 
 		core.MsgInfo("Done!")
 

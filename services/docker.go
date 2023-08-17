@@ -6,13 +6,16 @@ func ExtractDockerImage(imageName string, path string) {
 	core.ExecCommandWithStdout("/usr/libexec/docker-image-extract", []string{"-o", path, imageName})
 }
 
-func BuildAndExtractDockerImage(srcDir string) string {
+func BuildAndExtractDockerImage(srcDir string, platform string) string {
 	// ToDo これ被らないようにする
 	tmpFileName := "bm.tmproot.tar"
 	containerTmpTag := "bm.buildtmp"
 
 	core.MsgInfo("Building image with Docker...")
-	core.ExecCommandWithStdout("docker", []string{"build", srcDir, "-t", containerTmpTag})
+
+	dockerBuildArgs := []string{"build", srcDir, "-t", containerTmpTag, "--platform", "linux/" + platform}
+
+	core.ExecCommandWithStdout("docker", dockerBuildArgs)
 
 	core.MsgInfo("Extracting files from built image....")
 	containerId := core.ExecCommandGetResult("docker", []string{"run", "--detach", containerTmpTag, "false"})
